@@ -19,19 +19,26 @@ def generate_code(file):
     for klass in classes["classes"]:
         print(f"class {klass['name']} {{")
         for attr in klass["attributes"]:
-            print(f"    {get_class_type(attr)} {attr[0]};")
+            print(f"    {get_attribute_type(attr)} {get_attribute_name(attr)};")
         print("}\n")
 
     print(PROGRAM_STRING)
 
 
-def get_class_type(attribute):
+def get_attribute_type(attribute):
     type_ = attribute[1].__name__
     if type_ == 'dict':
         return attribute[0].capitalize()
     if type_ == 'list':
         return f"ArrayList<{attribute[0].capitalize()}>"
     return TYPES_MAP.get(attribute[0], 'String')
+
+
+def get_attribute_name(attribute):
+    type_ = attribute[1].__name__
+    if type_ == 'list':
+        return attribute[0].lower() if attribute[0][-1] == 's' else f'{attribute[0].lower()}s'
+    return attribute[0].lower()
 
 
 def parse_json(file):
