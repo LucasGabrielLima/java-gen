@@ -16,6 +16,7 @@ PROGRAM_STRING = """class Programa {
 
 def generate_code(file):
     classes = parse_json(file)
+    print("import java.util.ArrayList;")
     for klass in classes["classes"]:
         print(f"class {klass['name']} {{")
         for attr in klass["attributes"]:
@@ -73,9 +74,13 @@ def parse_json(file):
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: $ python3 javagen.py <json_file_to_parse>")
+        print("Or: $ python3 javagen.py <json_file_to_parse> <java_output_file>")
         sys.exit()
 
     file_path = sys.argv[1]
+
+    if len(sys.argv) == 3:
+        output_file = sys.stdout = open(f'{sys.argv[2]}.java', 'w')
 
     with open(file_path, 'r') as f:
         generate_code(f)
