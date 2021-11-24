@@ -1,6 +1,8 @@
 import sys
 import json
 
+from jinja2 import Template
+
 TYPES_MAP = {
     'str': 'String',
     'int': 'Integer',
@@ -13,17 +15,38 @@ PROGRAM_STRING = """class Programa {
    }
 }"""
 
+template = """import java.util.ArrayList;
+
+{% for klass in classes -%}
+class {{ klass.name}} {% raw %}{{% endraw %} 
+    {%- for attr in klass.attributes %}
+    {{attr.type}} {{attr.name}};
+    {%- endfor %}
+{% raw %}}{% endraw %} 
+
+{% endfor %}
+class Programa {
+   public static void main (String args[]){
+   }
+}
+"""
+
 
 def generate_code(file):
     classes = parse_json(file)
-    print("import java.util.ArrayList;")
-    for klass in classes["classes"]:
-        print(f"class {klass['name']} {{")
-        for attr in klass["attributes"]:
-            print(f"    {get_attribute_type(attr)} {get_attribute_name(attr)};")
-        print("}\n")
+    filled_template = Template(template)
+    output = filled_template.render(classes=classes['classes'])
+    print(output)
+    return
 
-    print(PROGRAM_STRING)
+    # print("import java.util.ArrayList;")
+    # for klass in classes["classes"]:
+    #     print(f"class {klass['name']} {{")
+    #     for attr in klass["attributes"]:
+    #         print(f"    {get_attribute_type(attr)} {get_attribute_name(attr)};")
+    #     print("}\n")
+
+    # print(PROGRAM_STRING)
 
 
 def get_attribute_type(attribute):
@@ -52,7 +75,10 @@ def parse_json(file):
             if isinstance(d[key], dict):
                 klass = {
                     "name": key,
-                    "attributes": [(k, type(v)) for k, v in d[key].items()]
+                    "attributes": [{
+                        "name": get_attribute_name((k, type(v))),
+                        "type": get_attribute_type((k, type(v)))
+                    } for k, v in d[key].items() ]
                 }
                 classes["classes"].append(klass)
 
@@ -61,7 +87,10 @@ def parse_json(file):
             if isinstance(d[key], list):
                 klass = {
                     "name": key,
-                    "attributes": [(k, type(v)) for k, v in d[key][0].items()]
+                    "attributes": [{
+                        "name": get_attribute_name((k, type(v))),
+                        "type": get_attribute_type((k, type(v)))
+                    } for k, v in d[key][0].items() ]
                 }
                 classes["classes"].append(klass)
 
@@ -80,7 +109,7 @@ if __name__ == "__main__":
     file_path = sys.argv[1]
 
     if len(sys.argv) == 3:
-        output_file = sys.stdout = open(f'{sys.argv[2]}.java', 'w')
+        sys.stdout = open(f'{sys.argv[2]}.java', 'w')
 
     with open(file_path, 'r') as f:
         generate_code(f)
